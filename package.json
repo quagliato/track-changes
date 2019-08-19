@@ -1,0 +1,42 @@
+{
+  "name": "track-changes",
+  "version": "1.0.0",
+  "description": "Tool to track changes in public URLs and notify someone",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "url",
+    "monitoring",
+    "aws",
+    "aws",
+    "s3",
+    "sendgrid",
+    "mongodb"
+  ],
+  "author": "Eduardo Quagliato <eduardo@quagliato.me>",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@sendgrid/mail": "^6.1.2",
+    "aws-sdk": "^2.108.0",
+    "body-parser": "^1.17.2",
+    "dat": "^13.8.1",
+    "eslint": "^4.6.0",
+    "express": "^4.15.4",
+    "got": "^9.6.0",
+    "mongodb": "^2.2.36",
+    "mongoskin": "^2.1.0",
+    "request": "^2.81.0",
+    "sha1": "^1.1.1"
+  },
+  "devDependencies": {
+    "eslint-config-airbnb-base": "^11.3.2",
+    "eslint-config-google": "^0.9.1",
+    "eslint-config-standard": "^10.2.1",
+    "eslint-plugin-import": "^2.7.0",
+    "eslint-plugin-node": "^5.1.1",
+    "eslint-plugin-promise": "^3.5.0",
+    "eslint-plugin-standard": "^3.0.1"
+  }
+}
