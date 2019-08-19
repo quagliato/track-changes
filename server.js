@@ -4,7 +4,9 @@ const express = require('express')
 const URL = require('./src/controller/URL')
 
 async function run () {
-  const config = require(process.env.TRACK_CHANGE_CONFIG || './config.json')
+  const config = (process.env.TRACK_CHANGES_CONFIG
+    ? JSON.parse(process.env.TRACK_CHANGES_CONFIG)
+    : require('./config.json'))
   const dbInstance = await db(config)
   const app = express()
 
