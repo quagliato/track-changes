@@ -1,6 +1,5 @@
 {
   "name": "track-changes",
-  "version": "1.0.0",
   "alias": ["track-changes"],
   "env": {
     "TRACK_CHANGES_CONFIG": "@track_changes_config"
