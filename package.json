@@ -21,9 +21,12 @@
     "@sendgrid/mail": "^6.1.2",
     "aws-sdk": "^2.108.0",
     "body-parser": "^1.17.2",
+    "diff": "^4.0.1",
     "express": "^4.15.4",
     "got": "^9.6.0",
-    "mongodb": "^2.2.36"
+    "mongodb": "^2.2.36",
+    "parse-domain": "^2.3.2",
+    "to-pure-markdown": "^3.0.1"
   },
   "devDependencies": {
     "eslint": "^6.2.0",

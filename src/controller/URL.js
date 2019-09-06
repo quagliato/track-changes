@@ -3,6 +3,8 @@ const S3 = require('../shared/S3')
 const URL = require('../model/URL')
 const sgMail = require('@sendgrid/mail')
 const got = require('got')
+const diff = require('diff')
+const parseDomain = require('parse-domain')
 
 const urlAlreadyExists = (url, email) => {
   if (url.get().emails && url.get().emails.indexOf(email) >= 0) {
@@ -91,23 +93,30 @@ const deleteX = (req, res) => {
     })
 }
 
-const sendEmail = (config, url) => {
+const composeSiteName = (url) => Object.values(parseDomain(url)).filter(value => value !== "").join(".")
+
+const sendEmail = (config, url, diff) => {
   sgMail.setApiKey(config.SENDGRID_API_KEY)
   return Promise.all(
     url.get().emails.map(email => {
       const msg = {
         to: email,
         from: 'no-reply@quagliato.me',
-        subject: `The content of ${url.get()._id} was updated`,
-        text: `The url ${url.get().url} (which we are tracking for you) was updated moments ago.\nRefer to the page to see the updated version.`,
-        html: `<p>The url ${url.get().url} (which we are tracking for you) was updated moments ago.</p><p>Refer to the page to see the updated version.</p>`
+        subject: `The content of ${composeSiteName(url.get().url)} was updated`,
+        text: `The url ${url.get().url} (which we are tracking for you) was updated moments ago.\nRefer to the page to see the updated version.\nThis is the difference: ${diff}`,
+        html: `<p>The url ${url.get().url} (which we are tracking for you) was updated moments ago.</p><p>Refer to the page to see the updated version.</p><p>This is the difference:</p><br>${diff}`
       }
       return sgMail.send(msg)
     })
   )
 }
 
-const updateURL = (config, url, newBody) => {
+const composeDiff = (oldBody, newBody) => {
+  const difference = diff.diffChars(oldBody, newBody)
+  return difference.map(part => `${part.added ? "++" : part.removed ? "--" : ".."} ${part.value}`).join("\n")
+}
+
+const updateURL = (config, url, newBody, oldBody) => {
   console.log(`${url.get()._id} - There's a new version os this URL, updating it...`)
   url.set('updated', new Date())
   const s3 = new S3(config)
@@ -118,7 +127,7 @@ const updateURL = (config, url, newBody) => {
     })
     .then(() => {
       console.log(`${url.get()._id} - Updated MongoDB.`)
-      return sendEmail(config, url)
+      return sendEmail(config, url, composeDiff(oldBody, newBody))
     })
     .then(() => {
       console.log(`${url.get()._id} - Sent e-mail`)
@@ -135,15 +144,25 @@ const processURL = (config, url) => {
     s3.get(url.get()._id.toString())
   ])
     .then(result => {
-      if (result[0].body === result[1]) {
+      console.log(1)
+      const newBody = result[0].body
+      console.log(2)
+      const oldBody = result[1]
+      console.log(3)
+      const difference = diff.diffChars(newBody, oldBody)
+      console.log(difference)
+      const filteredDifference = difference.filter(part => part.added || part.removed)
+      console.log(filteredDifference)
+      console.log(`${url.get()._id} - Found ${filteredDifference.length} differences`)
+      if (filteredDifference.length === 0) {
         console.log(`${url.get()._id} - New URL is the same as the stored in S3`)
         return url.get()
       }
 
-      return updateURL(config, url, result[1])
+      return updateURL(config, url, newBody, oldBody)
     })
     .catch(err => {
-      console.log(`${url.get()._id} - Could not process the URL.`)
+      console.log(`${url.get()._id} - Could not process the URL.`, err)
       return {
         ...url.get(),
         err
