@@ -93,7 +93,7 @@ const deleteX = (req, res) => {
     })
 }
 
-const composeSiteName = (url) => Object.values(parseDomain(url)).filter(value => value !== "").join(".")
+const composeSiteName = (url) => Object.values(parseDomain(url)).filter(value => value !== "").reverse().join(".")
 
 const sendEmail = (config, url, diff) => {
   sgMail.setApiKey(config.SENDGRID_API_KEY)
@@ -111,12 +111,14 @@ const sendEmail = (config, url, diff) => {
   )
 }
 
-const composeDiff = (oldBody, newBody) => {
+const composeDiff = (diff) => {
   const difference = diff.diffChars(oldBody, newBody)
-  return difference.map(part => `${part.added ? "++" : part.removed ? "--" : ".."} ${part.value}`).join("\n")
+  const differenceString = difference.map(part => `${part.added ? "++" : part.removed ? "--" : ".."} ${part.value}`)
+  if (differenceString.length > 5) return "(Too big to show here.)"
+  return differenceString.join("\n")
 }
 
-const updateURL = (config, url, newBody, oldBody) => {
+const updateURL = (config, url, newBody, diff) => {
   console.log(`${url.get()._id} - There's a new version os this URL, updating it...`)
   url.set('updated', new Date())
   const s3 = new S3(config)
@@ -127,7 +129,7 @@ const updateURL = (config, url, newBody, oldBody) => {
     })
     .then(() => {
       console.log(`${url.get()._id} - Updated MongoDB.`)
-      return sendEmail(config, url, composeDiff(oldBody, newBody))
+      return sendEmail(config, url, composeDiff(diff))
     })
     .then(() => {
       console.log(`${url.get()._id} - Sent e-mail`)
@@ -144,22 +146,17 @@ const processURL = (config, url) => {
     s3.get(url.get()._id.toString())
   ])
     .then(result => {
-      console.log(1)
       const newBody = result[0].body
-      console.log(2)
       const oldBody = result[1]
-      console.log(3)
       const difference = diff.diffChars(newBody, oldBody)
-      console.log(difference)
       const filteredDifference = difference.filter(part => part.added || part.removed)
-      console.log(filteredDifference)
       console.log(`${url.get()._id} - Found ${filteredDifference.length} differences`)
       if (filteredDifference.length === 0) {
         console.log(`${url.get()._id} - New URL is the same as the stored in S3`)
         return url.get()
       }
 
-      return updateURL(config, url, newBody, oldBody)
+      return updateURL(config, url, newBody, filteredDifference)
     })
     .catch(err => {
       console.log(`${url.get()._id} - Could not process the URL.`, err)
