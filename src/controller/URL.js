@@ -111,14 +111,13 @@ const sendEmail = (config, url, diff) => {
   )
 }
 
-const composeDiff = (diff) => {
-  const difference = diff.diffChars(oldBody, newBody)
-  const differenceString = difference.map(part => `${part.added ? "++" : part.removed ? "--" : ".."} ${part.value}`)
+const composeDiff = (filteredDifference) => {
+  const differenceString = filteredDifference.map(part => `${part.added ? "++" : part.removed ? "--" : ".."} ${part.value}`)
   if (differenceString.length > 5) return "(Too big to show here.)"
   return differenceString.join("\n")
 }
 
-const updateURL = (config, url, newBody, diff) => {
+const updateURL = (config, url, newBody, filteredDifference) => {
   console.log(`${url.get()._id} - There's a new version os this URL, updating it...`)
   url.set('updated', new Date())
   const s3 = new S3(config)
@@ -129,7 +128,7 @@ const updateURL = (config, url, newBody, diff) => {
     })
     .then(() => {
       console.log(`${url.get()._id} - Updated MongoDB.`)
-      return sendEmail(config, url, composeDiff(diff))
+      return sendEmail(config, url, composeDiff(filteredDifference))
     })
     .then(() => {
       console.log(`${url.get()._id} - Sent e-mail`)
@@ -159,7 +158,8 @@ const processURL = (config, url) => {
       return updateURL(config, url, newBody, filteredDifference)
     })
     .catch(err => {
-      console.log(`${url.get()._id} - Could not process the URL.`, err)
+      console.error(`${url.get()._id} - Could not process the URL:`)
+      console.error(err)
       return {
         ...url.get(),
         err

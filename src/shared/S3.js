@@ -43,8 +43,11 @@ S3.prototype.get = function (key, body, headers) {
       Key: key
     }
     self.s3.getObject(params, (err, data) => {
-      if (err) reject(err)
-      resolve(String(data.Body))
+      if (err || !data || !data.Body) {
+        return resolve('')
+      }
+
+      return resolve(String(data.Body))
     })
   })
 }

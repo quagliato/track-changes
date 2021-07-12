@@ -1,22 +1,13 @@
-const mongodb = require('mongodb')
-const MongoClient = mongodb.MongoClient
+const { MongoClient } = require('mongodb')
 
-const createClient = async (config) => {
-  let authentication = ''
-  if (config.MONGODB_SETTINGS.DB_USER && config.MONGODB_SETTINGS.DB_PASS) {
-    authentication = `${config.MONGODB_SETTINGS.DB_USER}:${config.MONGODB_SETTINGS.DB_PASS}@`
-  }
-  let host = `${config.MONGODB_SETTINGS.DB_HOST}`
-  if (config.MONGODB_SETTINGS.DB_HOST.indexOf(',') === -1) {
-    host = `${host}:${config.MONGODB_SETTINGS.DB_PORT}`
-  }
-  const url = `mongodb://${authentication}${host}`
-  return MongoClient.connect(url)
+const createClient = (config) => {
+  const client = new MongoClient()
+  return client.connect(config.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
 }
 
 const createConnection = async (config) => {
   const client = await createClient(config)
-  return client.db(config.MONGODB_SETTINGS.DB_NAME)
+  return client.db(config.MONGODB_NAME)
 }
 
 module.exports = async function (config) {
@@ -29,7 +20,7 @@ module.exports = async function (config) {
   }
 
   try {
-    await connection.collection('test').find().toArray()
+    await connection.collection('url').find().toArray()
   } catch (e) {
     console.error(e)
     process.exit(1)
