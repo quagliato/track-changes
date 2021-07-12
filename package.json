@@ -24,7 +24,7 @@
     "diff": "^4.0.2",
     "express": "^4.15.4",
     "got": "^9.6.0",
-    "mongodb": "^2.2.36",
+    "mongodb": "^3.1.13",
     "parse-domain": "^2.3.4",
     "to-pure-markdown": "^3.0.1"
   },
