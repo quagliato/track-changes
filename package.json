@@ -22,7 +22,7 @@
     "aws-sdk": "^2.943.0",
     "body-parser": "^1.17.2",
     "diff": "^4.0.2",
-    "express": "^4.15.4",
+    "express": "^4.17.3",
     "got": "^9.6.0",
     "mongodb": "^2.2.36",
     "parse-domain": "^2.3.4",
